@@ -1,0 +1,12 @@
+---
+- name: Exercise 8-3
+  hosts: all
+
+  tasks:
+    - name: Generate /etc/hosts file
+      become: true
+      template:
+        src: templates/8-3.j2
+        dest: /tmp/hosts
+        owner: ansible
+        group: ansible

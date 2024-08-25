@@ -1,0 +1,29 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+    - name: Install apache2
+      apt:
+        name: "{{ package }}"
+        state: present
+        cache_valid_time: 3600
+      when: inventory_hostname in groups["debian"]
+    - name: Install httpd
+      dnf:
+        name: "{{ package }}"
+        state: present
+      when: inventory_hostname in groups["rhel"]
+    - name: Start and enable httpd
+      service:
+        name: "{{ package }}"
+        state: started
+        enabled: true
+    - name: Create Anna user
+      user:
+        name: anna
+        state: present
+    - name: Copy hosts file
+      copy:
+        src: /etc/hosts
+        dest: /tmp/

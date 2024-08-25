@@ -1,0 +1,19 @@
+---
+- name: Setup custom facts
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Create facts directory
+      file:
+        path: /etc/ansible/facts.d/
+        state: directory
+        recurse: yes
+    - name: Copy facts files to hosts
+      synchronize:
+        src: facts/
+        dest: /etc/ansible/facts.d/
+        checksum: true
+        archive: false
+        recursive: true
+        delete: true

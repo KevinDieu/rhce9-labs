@@ -1,0 +1,32 @@
+---
+- name: Lab using blocks
+  hosts: all
+
+  tasks:
+    - name: Should succeed
+      block:
+        - name: Remove a file
+          file:
+            path: /var/www/index.html
+            state: absent
+        - name: Print status
+          debug:
+            msg: "Block task was operated"
+        - name: Fail the block
+          fail:
+            msg: "Intentional Fail"
+      rescue:
+        - name: Create a file
+          file:
+            path: /tmp/rescuefile
+            state: touch
+        - name: Printing rescue status
+          debug:
+            msg: "Rescue task was operated"
+      always:
+        - name: Always write a message to logs
+          community.general.syslogger:
+            msg: "logger hello"
+        - name: Always print this message
+          debug:
+            msg: "This message is always printed"

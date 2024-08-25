@@ -1,0 +1,48 @@
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+
+  tasks:
+    - name: Add gh-cli repo
+      become: true
+      yum_repository:
+        name: gh-cli
+        description: packages for the GitHub CLI
+        baseurl: https://cli.github.com/packages/rpm
+        gpgkey: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x23F3D4EA75716059
+        state: present
+    - name: Install packages
+      become: true
+      dnf:
+        name: 
+          - python3-pip
+          - vim
+          - tldr
+          - ripgrep
+          - bat
+          - fd-find
+          - python3-argcomplete
+          - gh
+          - wget
+        state: present
+    - name: Install pip packages
+      become: true
+      pip:
+        name:
+          - psutil
+          - ansible-navigator
+    - name: Install homebrew
+      shell:
+        cmd: curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+    - name: Pull dotfile config
+      git:
+        repo: https://github.com/KevinDieu/dotfiles.git
+        dest: /home/{{ansible_user}}/dotfiles
+    - name: Sync config files to home dir
+      synchronize:
+        src: /home/{{ansible_user}}/dotfiles/home/
+        dest: /home/{{ansible_user}}
+        checksum: true
+        archive: false
+        recursive: true

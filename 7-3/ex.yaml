@@ -1,0 +1,16 @@
+---
+- hosts: all
+  force_handlers: true
+
+  tasks:
+    - name: Update kernel
+      become: true
+      when: "inventory_hostname in groups['rhel']"
+      package:
+        name: "{{ package }}"
+        state: latest
+      notify: Reboot server
+  handlers:
+    - name: Reboot server
+      become: true
+      reboot:

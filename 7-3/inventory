@@ -1,0 +1,15 @@
+---
+all:
+  children:
+    rhel:
+      hosts:
+        ansible[1:2]:
+      vars:
+        package: kernel
+    deb:
+      hosts:
+        ansible3:
+      vars:
+        package: kernel-package
+  vars:
+    ansible_user: ansible

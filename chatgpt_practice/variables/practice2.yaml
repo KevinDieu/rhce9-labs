@@ -1,0 +1,36 @@
+---
+- hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Print large_cache status
+      set_fact:
+        large_cache: "{{'4GB' if ansible_facts['memtotal_mb'] >= 1024 else '2GB'}}"
+    - name: Add template to host
+      template:
+        src: templates/memtemp2.j2
+        dest: /tmp/memtemp2
+    - name: Install psutil
+      become: true
+      package:
+        name: python3-psutil
+        state: present
+    - name: Check for running NetworkManager process
+      community.general.pids:
+        name: NetworkManager
+        ignore_case: true
+      register: nm_pid
+    - name: Write NM process to /tmp/nm_status
+      copy:
+        dest: /tmp/nm_status
+        content: |
+          "Network Manager {{ 'is' if nm_pid.pids else 'is not' }} running"
+    - name: Echo NetworkManger Process Status
+      debug:
+        msg: "{{ true if nm_pid.pids else false }}"
+    - name: Install config file on ansible2
+      run_once: true
+      delegate_to: ansible2
+      template:
+        src: templates/app_config.j2
+        dest: /tmp/app_config

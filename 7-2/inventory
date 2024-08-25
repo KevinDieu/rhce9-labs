@@ -1,0 +1,6 @@
+---
+all:
+  hosts:
+    ansible1:
+  vars:
+    ansible_user: ansible

@@ -1,0 +1,8 @@
+---
+- hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Get free memory
+      debug:
+        msg: "{{ ansible_facts['memory_mb']['real']['free'] }}"

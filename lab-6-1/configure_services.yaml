@@ -1,0 +1,81 @@
+---
+- name: Configure Fileserver
+  hosts: file
+  become: true
+  vars_files:
+    - vars/allvars.yaml
+
+  tasks:
+    - name: Install packages
+      dnf:
+        name:
+          - "{{ ansible_facts['ansible_local']['packages']['general']['smb_package'] }}"
+          - "{{ ansible_facts['ansible_local']['packages']['general']['ftp_package'] }}"
+          - "{{ ansible_facts['ansible_local']['packages']['general']['firewall_package'] }}"
+        state: latest
+    - name: Start services
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - "{{ ansible_facts['ansible_local']['services']['general']['smb_service'] }}"
+        - "{{ ansible_facts['ansible_local']['services']['general']['ftp_service'] }}"
+        - "{{ ansible_facts['ansible_local']['services']['general']['firewall_service'] }}"
+    - name: Open firewall ports
+      firewalld:
+        service: ftp
+        permanent: true
+        state: enabled
+      notify: Reload firewalld
+  handlers:
+    - import_tasks: global_handlers.yaml
+
+- name: Configure Webserver
+  hosts: lamp
+  become: true
+  vars_files:
+    - vars/allvars.yaml
+    
+  tasks:
+    - name: Install packages
+      dnf:
+        name:
+          - "{{ ansible_facts['ansible_local']['packages']['general']['db_package'] }}"
+          - "{{ ansible_facts['ansible_local']['packages']['general']['web_package'] }}"
+          - "{{ ansible_facts['ansible_local']['packages']['general']['firewall_package'] }}"
+          - "mariadb-server"
+        state: latest
+    - name: Start services
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - "{{ ansible_facts['ansible_local']['services']['general']['db_service'] }}"
+        - "{{ ansible_facts['ansible_local']['services']['general']['web_service'] }}"
+        - "{{ ansible_facts['ansible_local']['services']['general']['firewall_service'] }}"
+    - name: Create web root
+      file:
+        state: directory
+        path: "{{ web_root }}"
+        recurse: true
+    - name: Copy index.html
+      synchronize:
+        src: files/index.html
+        dest: "{{ web_root }}"
+        delete: true
+        archive: false
+        checksum: true
+        recursive: true
+    - name: Open firewall ports
+      firewalld:
+        service: "{{ item }}" 
+        permanent: true
+        state: enabled
+      loop:
+        - http
+        - https
+      notify: Reload firewalld
+  handlers:
+    - import_tasks: global_handlers.yaml

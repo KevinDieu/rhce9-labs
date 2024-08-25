@@ -1,0 +1,75 @@
+---
+- name: "Chapter 8-1 lab"
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Copy remote hosts file to temp location
+      delegate_to: "{{ inventory_hostname }}"
+      synchronize:
+        src: /etc/hosts
+        dest: /tmp/lab_hosts
+    - name: Add generated hosts to (temp) host files
+      blockinfile:
+        dest: /tmp/lab_hosts
+        block: "{{ lookup('template','templates/hosts.j2') }}"
+
+- name: "Chapter 8-2 lab"
+  hosts: ansible1
+  become: true
+
+  vars_files:
+    - vars/vsftpd_vars.yaml
+
+  tasks:
+    - name: Install required packages
+      dnf:
+        name: 
+          - vsftpd
+          - firewalld
+          - policycoreutils-python-utils
+        state: present
+    - name: Add vsftp config
+      template:
+        src: templates/vsftpd.conf.j2
+        dest: /etc/vsftpd/vsftpd.conf
+        owner: root
+        group: root
+        mode: "600"
+      notify: Reload vsftpd
+    - name: Open vsftp port
+      firewalld:
+        service: ftp
+        state: enabled
+        permanent: true
+        immediate: true
+    - name: Set /var/ftp/pub permissions
+      file:
+        path: /var/ftp/pub
+        state: directory
+        mode: "0777"
+    - name: Configure ftpd_anon_write bool to allow anon writes
+      seboolean:
+        name: ftpd_anon_write
+        persistent: true
+        state: true
+    - name: Set public_content_rw_t SELinux context type to /var/ftp/pub dir
+      sefcontext:
+        path: /var/ftp/pub
+        state: present
+        setype: public_content_rw_t
+      notify: Restorecon /var/ftp/pub
+    - name: Start and enable vsftp server
+      service:
+        name: vsftpd
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Reload vsftpd
+      service:
+        name: vsftpd
+        state: reloaded
+    - name: Restorecon /var/ftp/pub
+      command:
+        cmd: "restorecon -Rv /var/ftp/pub"

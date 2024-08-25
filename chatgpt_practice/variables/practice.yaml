@@ -1,0 +1,21 @@
+---
+- hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Print  total host memory
+      debug:
+        msg: "Total Memory: {{ ansible_facts['memtotal_mb'] }}"
+    - name: Register large_cache
+      set_fact:
+        large_cache: "{{ true if ansible_facts['memtotal_mb'] >= 1024 else false }}"
+    - name: Print large_cache
+      debug:
+        var: large_cache
+    - name: Print large_cache jinja result
+      debug:
+        msg: "{{ '2GB' if large_cache == true else '1GB' }}"
+    - name: Save template to host
+      template:
+        src: templates/memtemp.j2
+        dest: /tmp/memconf

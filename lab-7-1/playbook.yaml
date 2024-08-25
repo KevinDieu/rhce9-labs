@@ -1,0 +1,75 @@
+---
+- name: Lab 7-1
+  hosts: all
+  become: true
+
+  vars_files:
+    - vars/packages.yaml
+
+  tasks:
+    - name: Package block
+      block:
+        - name: Check for os compatibility
+          set_fact:
+            compatible: "{{ ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] | int >= 8 }}"
+        - name: Print compatible
+          debug:
+            var: compatible
+        - name: Fail incompatible nodes
+          when: not compatible
+          fail:
+            msg: "not compatible"
+        - name: Install packages
+          when: compatible
+          dnf:
+            name: "{{ item }}"
+            state: present
+          # http, mod_ssl
+          loop: "{{ packages }}"
+        - name: Start httpd
+          when: compatible
+          service:
+            name: httpd
+            state: started
+            enabled: true
+      rescue:
+        - debug:
+            msg: "Host {{ ansible_facts['hostname'] }} does not meet minimal requirements"
+
+- name: Setup index and firewall
+  hosts:
+    - ansible1
+    - ansible2
+  become: true
+
+  tasks:
+    - name: Copy index file
+      synchronize:
+        src: files/index.html
+        dest: /var/www/html
+        checksum: true
+        archive: false
+        recursive: true
+    - name: Install firewalld
+      dnf: 
+        name: firewalld
+        state: present
+    - name: Start and enable firewalld
+      service:
+        name: firewalld
+        state: started
+        enabled: true
+    - name: Allow http/s through firewall
+      firewalld:
+        service: "{{ item }}"
+        permanent: true
+        state: enabled
+      loop:
+        - http
+        - https
+      notify: Reload firewalld
+  handlers:
+    - name: Reload firewalld
+      service:
+        name: firewalld
+        state: reloaded

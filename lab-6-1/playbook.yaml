@@ -1,0 +1,3 @@
+---
+- import_playbook: copy_facts.yaml
+- import_playbook: configure_services.yaml

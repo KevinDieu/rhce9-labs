@@ -1,0 +1,48 @@
+---
+- name: Exercise 8-1
+  hosts: ansible1
+
+  vars:
+    file_path: /tmp/newfile
+  
+  tasks:
+    - name: Create a new file
+      file: 
+        name: "{{ file_path }}"
+        state: file
+        owner: ansible
+    - name: Check new file status
+      stat:
+        path: "{{ file_path }}"
+      register: newfile
+    - debug:
+        msg: "Current file values are {{ newfile }}"
+          
+- name: "Excersise 8-1 part 2"
+  hosts:
+    - ansible1
+    - ansible2
+
+  vars:
+    file_path: "/etc/motd"
+  
+  tasks:
+    - name: Fetch remote file
+      when: ansible_facts['hostname'] == 'ansible1'
+      fetch:
+        src: "{{ file_path }}"
+        dest: /tmp
+    - name: Add text to fetched local file
+      delegate_to: localhost
+      when: ansible_facts['hostname'] == 'ansible1'
+      blockinfile:
+        path: "/tmp/{{ ansible_facts['hostname'] }}/{{ file_path }}"
+        block: |
+          Welcome to {{ ansible_facts ['hostname'] }}!
+          for authorized use only
+        state: present
+    - name: Upload modified file to ansible2
+      when: ansible_facts['hostname'] == 'ansible2'
+      copy:
+        src: "/tmp/ansible1/{{ file_path }}"
+        dest: "/tmp"

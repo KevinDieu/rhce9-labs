@@ -1,0 +1,29 @@
+---
+- name: Restart httpd if running
+  hosts: ansible1
+  become: true
+
+  tasks:
+    - name: Install httpd
+      dnf:
+        name: httpd
+        state: present
+    - name: Start httpd
+      service:
+        name: httpd
+        state: started
+    - name: Get httpd status
+      command:
+        cmd: systemctl is-active httpd
+      register: httpd_status
+      ignore_errors: true
+      failed_when: false
+      changed_when: false
+    - name: Print conditional
+      debug:
+        msg: "{{ httpd_status.stdout == 'active' }}"
+    - name: Restart httpd if running
+      when: httpd_status.stdout == 'active'
+      service:
+        name: httpd
+        state: restarted

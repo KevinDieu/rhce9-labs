@@ -1,0 +1,22 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+    - name: Add ansible user
+      user:
+        name: ansible
+        state: present
+    - name: Add authorized key
+      authorized_key:
+        user: ansible
+        key: "{{ lookup('file', '/home/vagrant/.ssh/ansible.pub') }}"
+        state: present
+    - name: Add ansible user to sudoers
+      community.general.sudoers:
+        name: ansible
+        user: ansible
+        commands: ALL
+        nopassword: true
+        state: present
+

@@ -1,0 +1,29 @@
+---
+- name: Lab 9-1
+  hosts:
+    - ansible1
+    - ansible2
+  become: true
+
+  pre_tasks:
+    - name: Make conflicting packages absent
+      dnf:
+        name:
+          - httpd
+          - postgresql
+        state: absent
+    - name: Grant {{ ansible_user }} su access for postgres
+      community.general.sudoers:
+        name: ansible-do-as-postgresql
+        state: present
+        user: "{{ ansible_user }}"
+        runas: postgres
+        commands: ALL
+
+  roles:
+    - geerlingguy.nginx
+    - role: geerlingguy.postgresql
+      become: true
+
+
+

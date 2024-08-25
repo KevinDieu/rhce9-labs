@@ -1,0 +1,7 @@
+---
+- name: Use the motd role playbook
+  hosts: ansible2
+  roles:
+    - role: motd
+      become: true
+      system_manager: bob@example.com

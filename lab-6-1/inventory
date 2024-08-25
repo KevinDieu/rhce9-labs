@@ -1,0 +1,12 @@
+---
+all:
+  children:
+    file:
+      hosts:
+        ansible1:
+    lamp:
+      hosts:
+        ansible2:
+  vars:
+    ansible_user: ansible
+

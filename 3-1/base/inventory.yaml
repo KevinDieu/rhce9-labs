@@ -1,0 +1,16 @@
+---
+all:
+  hosts:
+    ansible1:
+    ansible2:
+  children:
+    servers:
+      children:
+        web:
+          hosts:
+            web1:
+            web2:
+        db:
+          hosts:
+            db1:
+            db2:

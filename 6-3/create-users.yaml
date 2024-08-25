@@ -1,0 +1,11 @@
+---
+- name: Create a user with vaulted variables
+  hosts: ansible1
+  vars_files:
+    - secrets.yaml
+  tasks:
+    - name: creating user
+      become: true
+      user:
+        name: "{{ username }}"
+        password: "{{ pwhash }}"

@@ -1,0 +1,77 @@
+---
+- name: Excersise 8-2
+  hosts: ansible1
+  become: true
+  vars:
+    path: /web
+    filename: index.html
+
+  tasks:
+    - name: Enable and enforce SeLinux
+      selinux:
+        policy: targeted
+        state: enforcing
+    - name: Install packages
+      dnf:
+        name:
+          - httpd
+          - policycoreutils-python-utils
+        state: present
+    - name: Start and enable webserver
+      service:
+        name: httpd
+        state: started
+        enabled: true
+    - name: Open firewall service
+      notify: Reload firewalld
+      firewalld:
+        service: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      loop:
+        - http
+        - https
+    - name: Create "{{ path }}" directory
+      file:
+        path: "{{ path }}"
+        state: directory
+    - name: Create {{ filename }} file in {{ path }}
+      copy:
+        dest: "{{ path }}/{{ filename }}"
+        content: 'Welcome to the excersise 8-2 webserver!'
+    - name: Use linefile to change webserver config
+      lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        regexp: ^DocumentRoot
+        line: DocumentRoot "{{ path }}"
+      notify: Reload httpd
+    - name: Use linefile to change webserver security
+      lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        regexp: '^<Directory'
+        line: '<Directory "{{ path }}">'
+      notify: Reload httpd
+    - name: Use sefcontext to set context on new documentroot
+      sefcontext: 
+        path: "{{ path }}/{{ filename }}"
+        setype: httpd_sys_content_t
+        state: present
+    - name: Run the restorecon command
+      command:
+        cmd: restorecon -Rv {{ path }}
+    - name: Allow web server to run user content
+      seboolean:
+        name: httpd_read_user_content
+        state: true
+        persistent: true
+
+  handlers:
+    - name: Reload firewalld
+      service:
+        name: firewalld
+        state: reloaded
+    - name: Reload httpd
+      service:
+        name: httpd
+        state: reloaded
