@@ -1,0 +1,28 @@
+---
+- name: "Lab 12-2"
+  hosts:
+    - ansible2
+    - ansible3
+  become: true
+
+  tasks:
+    - name: Add ansible1 repo as repository
+      yum_repository:
+        name: ansible1
+        description: Ansible1 internal repo
+        baseurl: http://ansible1/
+        gpgcheck: no
+        state: present
+        enabled: yes
+    - name: Install nginx package
+      dnf:
+        name: nginx
+        state: present
+        disablerepo: "*"
+        enablerepo: ansible1
+    - name: Gather package facts
+      package_facts:
+    - name: Print nginx facts
+      debug:
+        msg: "Name: {{ansible_facts.packages['nginx'][0]['name']}}; Version: {{ansible_facts.packages['nginx'][0]['version']}}"
+      

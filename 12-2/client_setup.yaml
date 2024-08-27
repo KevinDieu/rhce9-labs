@@ -1,0 +1,27 @@
+---
+- name: client_setup.yaml
+  hosts: ansible2
+  become: true
+
+  vars:
+    my_package: nmap
+
+  tasks:
+    - name: Connect to example repo
+      yum_repository:
+        name: rhce-controller
+        description: Package repo hosted on rhce-controler
+        baseurl: ftp://rhce-controller/repo
+        gpgcheck: no
+    - name: Install package
+      dnf:
+        name: "{{ my_package }}"
+        state: present
+    - name: Update package_facts
+      package_facts:
+    - name: Show package facts for {{ my_package }}
+      debug:
+        var: ansible_facts['packages'][my_package]
+      when: my_package in ansible_facts.packages
+
+

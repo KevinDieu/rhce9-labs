@@ -1,0 +1,15 @@
+- name: get basic vsftpd operational
+  yum:
+    name: vsftpd
+    state: installed
+- name: start and enable vsftpd
+  service:
+    name: vsftpd
+    enabled: yes
+    state: started
+- name: open port in firewall
+  firewalld:
+    service: ftp
+    permanent: yes
+    immediate: yes
+    state: enabled

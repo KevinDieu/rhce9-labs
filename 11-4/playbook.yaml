@@ -1,0 +1,14 @@
+---
+- name: Exercise 11-4
+  hosts: ansible4
+  
+  become: true
+
+  tasks:
+    - name: Remove ansible from wheel group
+      community.general.sudoers:
+        name: ansible
+        user: ansible
+        commands: ALL
+        nopassword: true
+        state: present

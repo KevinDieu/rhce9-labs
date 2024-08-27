@@ -1,0 +1,23 @@
+---
+- name: Exercsise 11-2
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Check if vgdata exists
+      command: vgs rocky
+      register: vg_result
+      ignore_errors: true
+    - name: Show vg_result variable
+      debug:
+        var: vg_result
+      tags:
+        - never
+        - debug
+    - name: Assert volume group existence
+      assert:
+        that:
+          - vg_result.rc == 0
+        fail_msg: Volume Group not found
+        success_msg: Volume Group found! 
+

@@ -1,0 +1,64 @@
+---
+- hosts: ansible1
+  become: true
+  
+  vars:
+    repo_path: /repo
+
+  tasks:
+    - name: Create /repo directory
+      file:
+        state: directory
+        path: "{{ repo_path }}"
+        mode: "0755"
+    - name: Download nginx packages
+      dnf:
+        name: nginx*
+        download_only: true
+        download_dir: /repo
+        state: present
+    - name: Install required packages
+      dnf:
+        name: 
+          - httpd
+          - createrepo
+          - firewalld
+          - policycoreutils-python-utils
+        state: present
+    - name: Generate repo metadata
+      command:
+        cmd: createrepo {{repo_path}}
+    - name: Update Selinx filetype
+      sefcontext:
+        path: '/repo(/.*)?'
+        setype: httpd_sys_content_t
+        state: present
+      notify: Restorecon /repo
+    - name: Add httpd config
+      template:
+        src: templates/httpd.conf.j2
+        dest: /etc/httpd/conf/httpd.conf
+      notify: Reload httpd
+    - name: Start httpd
+      service:
+        name: httpd
+        state: started
+        enabled: true
+    - name: Open http ports
+      firewalld:
+        service: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      loop:
+        - http
+        - https
+
+  handlers:
+    - name: Reload httpd
+      service:
+        name: httpd
+        state: reloaded
+    - name: Restorecon /repo
+      command:
+        cmd: restorecon -Rv /repo

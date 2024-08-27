@@ -1,0 +1,9 @@
+---
+- name: Error callback test
+  hosts: ansible1
+
+  tasks:
+    - name: Install nonexistent package
+      dnf:
+        name: foobar
+        state: present

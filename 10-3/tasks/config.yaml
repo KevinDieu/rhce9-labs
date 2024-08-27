@@ -1,0 +1,15 @@
+---
+- name: Install {{ packagename }}
+  dnf:
+    name: "{{ packagename }}"
+    state: latest
+- name: Enable and start "{{ servicename }}"
+  service:
+    name: "{{ servicename }}"
+    state: started
+    enabled: true
+- name: Open the service in the firewall
+  firewalld:
+    service: "{{ firewalld_servicename }}"
+    permanent: yes
+    state: enabled

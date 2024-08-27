@@ -1,0 +1,22 @@
+---
+- name: Deploy vsftpd
+  hosts: all
+  become: true
+  serial: 2
+  
+  vars_files:
+    vars/vars.yaml
+
+  tasks:
+    - name: Install vsftpd
+      import_tasks:
+        file: tasks/install_vsftpd.yaml
+    - name: Configure vsftpd using a template
+      import_tasks:
+        file: tasks/config_vsftpd.yaml 
+    - name: configure vsftpd permisiosns and selinux
+      import_tasks:
+        file: tasks/selinux.yaml
+  handlers:
+    - import_tasks:
+        file: handlers/selinux.yaml

@@ -1,0 +1,15 @@
+---
+- name: Exercsise 10-3
+  hosts: ansible2
+  become: true
+
+  vars_files:
+    - vars/ftp_vars.yaml
+
+  tasks:
+    - name: Install and enable vsftpd
+      import_tasks: 
+        file: tasks/config.yaml
+    - name: copy the README file
+      import_tasks: 
+        file: tasks/copy.yaml

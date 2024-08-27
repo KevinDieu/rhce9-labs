@@ -1,0 +1,44 @@
+---
+- name: Exercise 11-1
+  hosts: ansible2
+  become: true
+
+  vars:
+    apache_root: /etc/httpd
+    apache_user: httpd
+    apache_group: httpd
+
+  tasks:
+    - name: Install required packages
+      dnf:
+        name: 
+          - httpd
+          - firewalld
+        state: present
+    - name: Create httpd user
+      user:
+        name: httpd
+        shell: /sbin/nologin
+        create_home: false
+    - name: Add apache2 config file
+      template:
+        src: templates/httpd.conf.j2
+        dest: /etc/httpd/conf/httpd.conf
+      notify: Reload httpd
+      changed_when: true
+    - name: Start and enable httpd service
+      service:
+        name: httpd
+        state: started
+        enabled: true
+    - name: Open port in firewall
+      firewalld:
+        service: http
+        permanent: true
+        state: enabled
+        immediate: true
+  handlers:
+    - name: Reload httpd
+      service: 
+        name: httpd
+        state: reloaded

@@ -1,0 +1,51 @@
+---
+- name: Turn localhost into repo server
+  hosts: localhost
+  connection: localhost
+  become: true
+
+  tasks:
+    - name: Install ftp server
+      dnf:
+        name: vsftpd
+        state: latest
+    - name: Allow anon access to ftp
+      lineinfile:
+        path: /etc/vsftpd/vsftpd.conf
+        regexp: '^anonymous_enable=NO'
+        line: 'anonymous_enable=YES'
+    - name: Start ftp server
+      service:
+        name: vsftpd
+        state: started
+        enabled: true
+    - name: Open firewall for ftp
+      firewalld:
+        service: ftp
+        state: enabled
+        immediate: true
+        permanent: true
+    - name: Create repo dir
+      file:
+        path: /var/ftp/repo
+        state: directory
+    - name: Download packages
+      dnf:
+        name: nmap
+        download_only: yes
+        download_dir: /var/ftp/repo
+    - name: Install createrepo package
+      dnf:
+        name: createrepo_c
+        state: latest
+    - name: Createrepo
+      command: createrepo /var/ftp/repo
+      notify:
+        - Restart_ftp
+  handlers:
+    - name: Restart_ftp
+      service:
+        name: vsftpd
+        state: restarted
+
+

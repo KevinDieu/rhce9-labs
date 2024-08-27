@@ -1,0 +1,4 @@
+  - name: use template to copy FTP config
+    template:
+      src: templates/lab82.j2
+      dest: /etc/vsftpd/vsftpd.conf

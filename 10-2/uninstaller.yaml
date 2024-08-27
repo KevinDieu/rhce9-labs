@@ -1,0 +1,10 @@
+---
+- name: Uninstaller playbook
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Remove Apache
+      dnf:
+        name: httpd
+        state: absent
