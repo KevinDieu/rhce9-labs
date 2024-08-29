@@ -1,0 +1,14 @@
+## Next comes the main part: which users can run what software on 
+## which machines (the sudoers file can be shared between multiple
+## systems).
+## Syntax:
+##
+## 	user	MACHINE=COMMANDS
+##
+## The COMMANDS section may have other options added to it.
+##
+## Allow root to run any commands anywhere 
+{% for user in users %}
+{{user.name}}	ALL=(ALL) NOPASSWD: ALL
+{% endfor %}
+

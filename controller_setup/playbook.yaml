@@ -2,6 +2,7 @@
 - hosts: localhost
   gather_facts: false
   connection: local
+  become: true
 
   tasks:
     - name: Add gh-cli repo
@@ -32,6 +33,10 @@
         name:
           - psutil
           - ansible-navigator
+    - name: Skip hostkey checking globally
+      template:
+        src: templates/20-custom_ansible.conf.j2
+        dest: /etc/ssh/ssh_config.d/20-ansible_custom.conf
     - name: Install homebrew
       shell:
         cmd: curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh

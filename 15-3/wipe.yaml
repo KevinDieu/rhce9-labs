@@ -1,0 +1,37 @@
+---
+- name: Exercise 15-3
+  hosts: all
+  become: true
+
+  vars:
+    disk: sdb
+    partition: "{{disk}}1"
+
+  tasks:
+    - name: Check for /dev/{{disk}}
+      set_fact:
+        compatible: "{{ ansible_facts['devices'][disk] is defined }}"
+    - debug:
+        var: compatible
+    - fail:
+        msg: "/dev/{{disk}} not present on {{inventory_hostname}}"
+      when: not compatible
+    - name: Remove fstab entries
+      mount:
+        src: /dev/vgfiles/lvfiles
+        path: /files
+        state: absent
+      tags:
+        - wipe
+        - never
+    - name: Wipe disk
+      command:
+        cmd: wipefs -fa /dev/{{disk}}
+      notify: reboot
+      tags:
+        - wipe
+        - never
+  handlers:
+    - name: reboot
+      reboot:
+        reboot_timeout: 60

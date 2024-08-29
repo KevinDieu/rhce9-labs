@@ -1,0 +1,42 @@
+---
+- name: Exercise 15-1
+  hosts: all
+  become: true
+
+  vars:
+    disk: sdb
+  
+  tasks:
+    - name: Define variable according to diskname detected
+      set_fact:
+        disk2: sdb
+      when: ansible_facts['devices'][disk]
+      tags:
+        - always
+    - name: Print devices
+      debug:
+        var: ansible_facts['devices']
+      tags:
+        - never
+        - debug
+    - name: Remove lvm mounts
+      mount:
+        src: /dev/vgdata/lvdata
+        fstype: xfs
+        state: absent
+        path: /data
+      tags:
+        - never
+        - wipe
+    - name: Wipe existing partitions
+      command:
+        cmd: wipefs -af /dev/{{disk2}}
+      tags:
+        - never
+        - wipe
+    - name: Print success message
+      debug:
+        msg: "{{ disk2 }} wiped"
+      tags:
+        - never
+        - wipe

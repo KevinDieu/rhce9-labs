@@ -1,0 +1,17 @@
+---
+- name: Exercise 15-1
+  hosts: all
+  
+  tasks:
+    - name: Define variable according to diskname detected
+      ignore_errors: true 
+      set_fact:
+        disk2: sdb
+      when: ansible_facts['devices']['sdb']
+    - name: Fail when no second disk
+      fail:
+        msg: No second disk found
+      when: disk2 is not defined
+    - name: Showing this only for hosts with a second disk
+      debug:
+        msg: Continuing with {{ disk2 }}

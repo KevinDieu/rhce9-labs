@@ -1,0 +1,9 @@
+- name: Reboot
+  reboot:
+    msg: Reboot initiated by Ansible
+    test_command: whoami
+  register: reboot_var
+- name: Print rebooted status
+  debug:
+    var: reboot_var
+

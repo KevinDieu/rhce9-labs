@@ -1,0 +1,6 @@
+- name: Get crontab
+  command:
+    cmd: crontab -l
+  register: crontab
+- debug:
+    var: crontab['stdout_lines']

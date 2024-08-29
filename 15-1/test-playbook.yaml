@@ -1,0 +1,7 @@
+---
+- name: Test device facts
+  hosts: all
+  tasks:
+    - name: print device facts
+      debug:
+        var: ansible_facts['devices']

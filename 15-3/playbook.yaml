@@ -1,0 +1,69 @@
+---
+- name: Exercise 15-3
+  hosts: all
+  become: true
+
+  vars:
+    disk: sdb
+    partition: "{{disk}}1"
+
+  tasks:
+    - name: Check for /dev/{{disk}}
+      set_fact:
+        compatible: "{{ ansible_facts['devices'][disk] is defined }}"
+    - debug:
+        var: compatible
+    - fail:
+        msg: "/dev/{{disk}} not present on {{inventory_hostname}}"
+      when: not compatible
+    - name: Partition {{ disk }}
+      parted:
+        device: /dev/{{ disk }}
+        name: lvm_part
+        number: 1
+        part_end: "100%"
+        label: gpt
+        state: present
+    - name: Create vgfiles VG
+      lvg:
+        vg: vgfiles
+        pvs: "/dev/{{disk}}1"
+        pvresize: true
+    - name: Refresh facts
+      setup:
+    - name: Get disk size
+      shell:
+        cmd: vgs vgfiles -o size --noheadings --units g --nosuffix | xargs
+      register: disk_size
+    - set_fact:
+        large_disk: "{{ (disk_size['stdout'] | int) > 5 }}"
+    - name: Create lvfiles LVM on large vg
+      when: large_disk
+      lvol:
+        lv: lvfiles
+        size: "6G"
+        vg: vgfiles
+        state: present
+      # force: true
+    - name: Create lvfiles LVM on small vg
+      when: not large_disk
+      lvol:
+        lv: lvfiles
+        size: "3G"
+        vg: vgfiles
+        state: present
+    - name: Format volume with xfs
+      filesystem: 
+        fstype: xfs
+        dev: /dev/vgfiles/lvfiles
+        state: present
+    - name: Create /files mountpoint
+      file:
+        path: /files
+        state: directory
+    - name: Mount lvms to mountpoint
+      mount:
+        src: /dev/vgfiles/lvfiles
+        path: /files
+        fstype: xfs
+        state: mounted

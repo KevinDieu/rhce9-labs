@@ -1,0 +1,15 @@
+---
+- name: Exercise 14-2
+  hosts: ansible2
+  become: true
+
+  tasks:
+    - name: Set default boot target to multi-user
+      file:
+        src: /usr/lib/systemd/system/multi-user.target
+        dest: /etc/systemd/system/default.target
+        state: link
+      notify: Reboot
+  handlers:
+    - name: Reboot
+      include_tasks: reboot.yaml

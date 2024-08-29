@@ -1,0 +1,29 @@
+---
+- name: Exercise 13-2
+  hosts: localhost
+  connection: local
+  become: true
+
+  tasks:
+    - name: Create local user and ssh key
+      user:
+        name: "{{ username }}"
+        generate_ssh_key: true
+        ssh_key_comment: "{{ username }}@{{ ansible_facts['fqdn'] }}"
+    - name: Copy ssh key to playbook directory
+      shell:
+        cmd: cat /home/{{ username }}/.ssh/id_rsa.pub > files/{{ username }}_id_rsa.pub
+
+- name: Setup remote host
+  hosts: ansible1
+  become: true
+
+  tasks:
+    - name: Create remote user
+      user:
+        name: "{{ username }}"
+    - name: Add authorized key
+      authorized_key:
+        user: "{{ username }}"
+        key: "{{ lookup('file', 'files/' + username + '_id_rsa.pub') }}"
+        state: present

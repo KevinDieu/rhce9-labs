@@ -1,0 +1,21 @@
+---
+- name: Exercise 13-3
+  hosts: ansible3
+  become: true
+
+  vars_prompt:
+    - name: passwd
+      prompt: Enter password
+  vars:
+    - user: sharon
+  
+  tasks:
+    - name: Create hashed password
+      debug:
+        msg: "{{ '{{ passw }}' | password_hash('sha512', 'myrandomsalt')}}"
+      register: mypass
+    - name: Create user
+      user:
+        name: "{{ user }}"
+        password: "{{ mypass.msg }}"
+        state: present

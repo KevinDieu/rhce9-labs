@@ -1,0 +1,28 @@
+---
+- name: Exercise 14-1
+  hosts: ansible2
+  tasks:
+    - name: Run a periodic job
+      cron:
+        name: "run logger"
+        minute: "0"
+        hour: "5"
+        job: "logger IT IS 5 AM"
+        state: present
+    - import_tasks: debug.yaml
+    - name: Overwrite previous job
+      cron:
+        name: "run logger"
+        minute: "0"
+        hour: "6"
+        job: "logger IT IS 6 AM"
+        state: present
+    - import_tasks: debug.yaml
+    - name: Remove cronjob
+      cron:
+        name: "run logger"
+        minute: "0"
+        hour: "6"
+        job: "logger IT IS 6 AM"
+        state: absent
+    - import_tasks: debug.yaml

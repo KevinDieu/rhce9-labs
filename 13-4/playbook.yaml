@@ -1,0 +1,74 @@
+---
+- name: Lab 13 Local Play
+  hosts: localhost
+  connection: local
+  become: true
+  vars_files:
+    - vars/users.yaml
+  tags:
+    - localsetup
+
+  #Local user creation only exists to generate the necessary keys
+  tasks:
+    - name: Create local users for keys
+      user:
+        name: "{{ item.name }}"
+        generate_ssh_key: true
+      loop: "{{ users }}"
+    - name: Create directories for key destinations
+      file:
+        path: files/{{ item.name }}
+        state: directory
+      loop: "{{ users }}"
+    - name: Copy public keyfiles to accessible dir
+      shell:
+        cmd: cat /home/{{ item.name }}/.ssh/id_rsa.pub > files/{{ item.name }}/id_rsa.pub
+      loop: "{{ users }}"
+    - name: Copy private keyfiles to accessible dir
+      shell:
+        cmd: cat /home/{{ item.name }}/.ssh/id_rsa > files/{{ item.name }}/id_rsa
+      loop: "{{ users }}"
+
+- name: Lab 13 remote play
+  hosts:
+    - ansible2
+    - ansible3
+  vars_files:
+    - vars/users.yaml
+  vars:
+    password: password
+  become: true
+  tags:
+    - remotesetup
+
+  tasks:
+    - name: Create hashed password
+      debug:
+        msg: "{{ password | password_hash('sha512', 'mysecretsalt') }}"
+      register: pass_hash
+    - name: Create groups
+      group:
+        name: "{{item.group}}"
+        state: present
+      loop: "{{ users }}"
+    - name: Create users
+      user:
+        name: "{{ item.name }}"
+        groups: "{{ item.group }}"
+        password: "{{ pass_hash.msg }}"
+        append: true
+        state: present
+      loop: "{{ users }}"
+    - name: Add authorized keys
+      authorized_key:
+        user: "{{ item.name }}"
+        key: "{{ lookup('file', 'files/' + item.name + '/id_rsa.pub' ) }}"
+        state: present
+      loop: "{{ users }}"
+    - name: Add sudoers file
+      template:
+        src: templates/ansible_sudoers.j2
+        dest: /etc/sudoers.d/ansible_sudoers
+        mode: "660"
+        owner: root
+        validate: /usr/sbin/visudo -cf %s

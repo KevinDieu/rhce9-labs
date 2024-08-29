@@ -1,0 +1,32 @@
+---
+- name: Lab14
+  hosts: ansible2
+  become: true
+
+  tasks:
+    - name: Create restart cronjob
+      cron:
+        name: Reboot at 2AM
+        job: reboot
+        hour: "2"
+        minute: "0"
+    - name: Create post-restart cronjob
+      cron:
+        name: Write post-reboot message to syslog
+        job: logger "CRON initiated reboot just completed"
+        special_time: reboot
+    - name: Set default target to multi-user.target
+      file:
+        src: /usr/lib/systemd/system/multi-user.target
+        dest: /etc/systemd/system/default.target
+        state: link
+    - name: Get current cron version
+      command:
+        cmd: crond -V
+      register: cronv
+    - name: Get service facts
+      service_facts:
+    - name: Print cron version
+      debug:
+        var: ansible_facts['services']['crond.service']
+

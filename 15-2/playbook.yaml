@@ -1,0 +1,59 @@
+---
+- name: Exercise 15-2
+  hosts: all
+  become: true
+  vars:
+    disk: sdb
+
+  tasks:
+    - name: Create new parition
+      parted:
+        name: swap
+        label: gpt
+        device: /dev/{{disk}}
+        number: 1
+        part_end: 2GiB
+        state: present
+    - name: Create another new partition
+      parted:
+        name: pv
+        label: gpt
+        device: /dev/{{disk}}
+        number: 2
+        part_start: 2GiB
+        part_end: 4GiB
+        state: present
+    - name: Create volume group
+      lvg:
+        vg: vgdata
+        pesize: "8"
+        pvs: "/dev/{{disk}}2"
+    - name: Create logical volume
+      lvol:
+        lv: lvdata
+        size: 100%VG
+        vg: vgdata
+    - name: Create xfs filesystem
+      filesystem:
+        dev: /dev/vgdata/lvdata
+        fstype: xfs
+    - name: Mount fileystem
+      mount:
+        src: /dev/vgdata/lvdata
+        fstype: xfs
+        state: mounted
+        path: /data
+    - name: Setup swap
+      when: ansible_facts['swaptotal_mb'] < 256
+      block:
+        - name: Create swap fs
+          filesystem:
+            fstype: swap
+            dev: "/dev/{{disk}}1"
+        - name: Activate swap space
+          command: swapon "/dev/{{disk}}1"
+    - name: Reboot
+      reboot:
+      tags:
+        - never
+        - reboot
