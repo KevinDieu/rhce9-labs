@@ -1,0 +1,21 @@
+---
+- name: Task7
+  hosts: ansible1
+  become: true
+  
+  tasks:
+    - name: Create cronjob
+      cron:
+        name: Update timelog
+        minute: "0"
+        job: "date > /var/log/time.log"
+        user: root
+        state: present
+    - name: Store root crontab
+      command:
+        cmd: crontab -l -u root
+      register: crontab
+    - name: Print stored crontab
+      debug:
+        var: crontab.stdout
+

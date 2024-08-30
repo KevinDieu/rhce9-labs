@@ -1,0 +1,64 @@
+---
+- name: "Install vsftpd"
+  hosts: ansible1
+  become: true
+  
+  tasks:
+    - name: Install packages
+      dnf:
+        name: 
+          - vsftpd
+          - firewalld
+          - policycoreutils-python-utils
+        state: present
+    - name: Open firewall port
+      firewalld:
+        service: ftp
+        state: enabled
+        permanent: true
+        immediate: true
+    - name: Start firewald
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - firewalld
+        - vsftpd
+
+- name: "Lab 8-2 part 2"
+  hosts: ansible1
+  become: true
+
+  vars:
+    target_path: /var/ftp/pub
+  
+  tasks:
+    - name: Copy config template
+      template:
+        src: templates/vsftpd.conf.j2
+        dest: /etc/vsftpd/vsftpd.conf
+        owner: root
+        mode: "600"
+    - name: Create share dir
+      file:
+        path: "{{ target_path }}"
+        state: directory
+        mode: "0777"
+    - name: Enable ftpd_anon_write boolean
+      seboolean:
+        name: ftpd_anon_write
+        persistent: true
+        state: true
+    - name: Set selinux context
+      sefcontext:
+        target: "{{ target_path }}(/.*)?"
+        setype: public_content_rw_t
+        state: present
+        reload: true
+      notify: restorecon
+  handlers:
+    - name: restorecon
+      command:
+        cmd: restorecon -Rv {{ target_path }}
+

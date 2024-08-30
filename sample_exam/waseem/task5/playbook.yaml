@@ -1,0 +1,17 @@
+---
+- hosts: all
+  become: true
+
+  vars_files:
+    - vars/secret.yaml
+    - vars/user_list.yaml
+
+  tasks:
+    - name: Create web users
+      include_tasks:
+        file: tasks/usercreate.yaml
+      when: inventory_hostname in groups['webservers']
+    - name: Create database users
+      include_tasks:
+        file: tasks/usercreate.yaml
+      when: inventory_hostname in groups['database']

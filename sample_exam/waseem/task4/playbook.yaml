@@ -1,0 +1,15 @@
+---
+- name: Task4
+  hosts: ansible1
+  become: true
+
+  tasks:
+    - name: Add custom sshd config
+      template:
+        src: templates/sshd_config.j2
+        dest: /etc/ssh/sshd_config
+        owner: root
+        group: root
+        mode: "600"
+        backup: true
+

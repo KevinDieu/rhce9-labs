@@ -1,0 +1,28 @@
+---
+- name: "Lab 9-1 Redux pt. 1"
+  hosts: ansible1
+  become: true
+
+  tasks:
+    - name: Remove incompatible packages
+      dnf:
+        name:
+          - httpd
+          - mysql
+        state: absent
+    - name: Include required roles
+      include_role:
+        name: "{{ item }}"
+      loop:
+        - geerlingguy.nginx
+        - geerlingguy.postgresql
+    - name: Start services
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - nginx
+        - postgresql
+        
+

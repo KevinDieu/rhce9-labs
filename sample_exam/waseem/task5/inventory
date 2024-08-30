@@ -1,0 +1,20 @@
+---
+all:
+  vars:
+    ansible_user: ansible
+  children:
+    proxy:
+      hosts:
+        ansible1:
+      vars:
+        uid_prefix: "-1"
+    webservers:
+      hosts:
+        ansible2:
+      vars:
+        uid_prefix: "1"
+    database:
+      hosts:
+        ansible3:
+      vars:
+        uid_prefix: "2"

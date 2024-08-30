@@ -1,0 +1,41 @@
+---
+- name: Local setup
+  hosts: localhost
+  connection: local
+  become: true
+
+  tasks:
+    - dnf:
+        name: rhel-system-roles
+        state: present
+
+- name: Lab 9-2 redux
+  hosts: ansible1
+  become: true
+  
+  tasks:
+    - name: Install necessary SELinux packages
+      dnf:
+        name: policycoreutils-python-utils
+        state: present
+    - name: Allow selinux relabling to be cron automated
+      seboolean:
+        name: cron_can_relabel
+        state: true
+        persistent: true
+    - name: Create /var/ftp/uploads directory
+      file:
+        path: /var/ftp/uploads
+        state: directory
+    - name: Allow port 82 through SELinux
+      seport:
+        setype: http_port_t
+        ports:
+          - 82
+        proto: tcp
+        state: present
+        reload: true
+    - name: Enforce SELinux
+      selinux:
+        policy: targeted
+        state: enforcing

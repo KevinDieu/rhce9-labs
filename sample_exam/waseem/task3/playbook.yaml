@@ -1,0 +1,10 @@
+---
+- name: "Task 3"
+  hosts: all
+  become: true
+  
+  tasks:
+    - name: Add cutom motd
+      template:
+        src: templates/motd.j2
+        dest: /etc/motd

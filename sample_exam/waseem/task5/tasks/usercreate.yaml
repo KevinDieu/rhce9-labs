@@ -1,0 +1,16 @@
+- name: Create users
+  user:
+    name: "{{ item.username }}"
+    password: "{{ user_password | password_hash('sha512', 'supersecuresalt') }}"
+    uid: "{{ item.uid }}"
+    groups: wheel
+    append: true
+    shell: "/bin/bash"
+  loop: "{{users}}"
+  when: item.uid is match(uid_prefix)
+- name: Add authorized keys
+  authorized_key:
+    user: "{{ item.username }}"
+    key: "{{ lookup('file', 'files/sample_exam.pub') }}"
+  loop: "{{users}}"
+  when: item.uid is match(uid_prefix)

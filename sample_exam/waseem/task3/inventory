@@ -1,0 +1,20 @@
+---
+all:
+  vars:
+    ansible_user: ansible
+  children:
+    proxy:
+      hosts:
+        ansible1:
+      vars:
+        server_type: HAProxy
+    webservers:
+      hosts:
+        ansible2:
+      vars:
+        server_type: Apache
+    database:
+      hosts:
+        ansible3:
+      vars:
+        server_type: MySQL
