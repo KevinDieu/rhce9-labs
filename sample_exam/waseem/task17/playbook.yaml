@@ -1,0 +1,11 @@
+---
+- name: Task17
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Set default runlevel to multi-user
+      file:
+        state: link
+        src: /usr/lib/systemd/system/multi-user.target
+        path: /etc/systemd/system/default.target

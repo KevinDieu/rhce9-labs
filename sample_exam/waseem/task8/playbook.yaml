@@ -1,0 +1,15 @@
+---
+- name: Task8
+  hosts: ansible1
+  become: true
+
+  tasks:
+    - name: Add yum repository
+      yum_repository:
+        name: rpms
+        description: This is the main repo file
+        baseurl: 
+          - http://repo.ansi.example.com/BaseOS
+          - http://repo.ansi.example.com/AppStream
+        state: present
+        enabled: false

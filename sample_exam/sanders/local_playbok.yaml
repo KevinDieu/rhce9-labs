@@ -1,0 +1,14 @@
+---
+- name: Local controller setup
+  hosts: localhost
+  connection: local
+  become: true
+
+  tasks:
+    - name: Install httpd
+      dnf:
+        name:
+          - httpd
+        state: present
+    - name: Make control node repo server
+

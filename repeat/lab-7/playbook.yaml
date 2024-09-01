@@ -1,0 +1,45 @@
+---
+- name: 7-1
+  hosts: ansible2
+  become: true
+
+  tasks:
+    - name: Include package names
+      include_vars:
+        file: vars/packages.yaml
+    - name: Check for compatibility
+      set_fact:
+        compatible: "{{ ansible_facts['os_family'] == 'CentOS' or ansible_facts['os_family'] == 'RedHat' }}"
+    - debug:
+        var: compatible
+    - name: Fail incompatible systems
+      when: not compatible
+      fail:
+        msg: "Host {{ansible_facts['hostname']}} does not meet minimal requirements"
+    - name: Install packages
+      when: compatible
+      dnf:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ packages }}"
+    - name: Try copying index.html
+      block:
+        - name: Copy index.html
+          synchronize:
+            src: files/index.html.nope
+            dest: /var/www/html.index.html
+            checksum: true
+            archive: false
+      rescue:
+        - name: Show error message when copy fails
+          debug:
+            msg: "Copy failed for hostname {{ansible_facts['hostname']}}"
+    - name: Open firewall
+      firewalld:
+        service: "{{ item }}"
+        state: enabled
+        immediate: true
+        permanent: true
+      loop:
+        - http
+        - https

@@ -1,0 +1,22 @@
+---
+- name: Install proxy packages
+  hosts: proxy
+  become: true
+  tasks:
+    - name: Install packages
+      dnf:
+        name:
+          - tcpdump
+          - s-nail
+        state: present
+
+- name: Install database packages
+  hosts: database
+  become: true
+  tasks:
+    - name: Install packages
+      dnf:
+        name:
+          - lsof
+          - s-nail
+        state: present

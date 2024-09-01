@@ -1,0 +1,29 @@
+---
+- name: Task18
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Configure database servers
+      when: ansible_host in groups['database']
+      block:
+        - name: Install policycoreutils-python package
+          dnf:
+            name: python3-policycoreutils
+            state: present
+        - name: Create automation user
+          user:
+            name: automation
+            state: present
+        - name: Add custom config file
+          template:
+            src: templates/server_list.j2
+            dest: /etc/server_list.txt
+            owner: automation
+            mode: "0600"
+        - name: Set config file context
+          sefcontext:
+            target: /etc/server_list.txt
+            setype: net_conf_t
+            state: present
+

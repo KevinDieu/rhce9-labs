@@ -1,0 +1,77 @@
+---
+# tasks file for sample-mysql
+- name: Install packages
+  dnf:
+    name:
+      - mariadb-server
+      - firewalld
+      - python3-mysqlclient
+    state: present
+- name: Open firewall
+  firewalld:
+    service: mysql
+    state: enabled
+    immediate: true
+    permanent: true
+- name: Read device info
+  parted:
+    device: /dev/sdb
+  register: sdb_info
+  tags:
+    - never
+    - wipe
+- name: Remove all partitions from target device
+  community.general.parted:
+    device: /dev/sdb
+    number: "{{ item.num }}"
+    state: absent
+  loop: "{{ sdb_info.partitions }}"
+  tags:
+    - never
+    - wipe
+- name: Create primary partition
+  community.general.parted:
+    device: /dev/sdb
+    number: 1
+    state: present
+    part_end: 800MiB
+    resize: true
+- name: Remove vgfiles volume group
+  lvg:
+    vg: vgfiles
+    state: absent
+    force: true
+- name: Create lvm volume group
+  lvg:
+    vg: vg_databases
+    pvs: /dev/sdb1
+    state: present
+- name: Create lvm
+  lvol:
+    lv: lv_mysql
+    vg: vg_databases
+    size: "512m"
+- name: Create filesystem
+  filesystem:
+    fstype: xfs
+    dev: /dev/vg_databases/lv_mysql
+- name: Create mountpoint
+  file:
+    state: directory
+    path: /mnt/mysql_backups
+- name: Mount filesystem
+  mount:
+    src: /dev/vg_databases/lv_mysql
+    path: /mnt/mysql_backups
+    fstype: xfs
+    state: mounted
+- name: Start and enable mariadb
+  service:
+    name: mariadb
+    state: started
+    enabled: true
+- name: Set mysql config
+  template:
+    src: templates/my.cnf.j2
+    dest: /etc/my.cnf
+  notify: reload mariadb

@@ -1,6 +1,6 @@
 ---
 all:
   hosts:
-    ansible[1:3]:
+    ansible[1:2]:
   vars:
     ansible_user: vagrant

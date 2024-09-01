@@ -1,0 +1,3 @@
+---
+# defaults file for sample-mysql
+mysql_password: password123

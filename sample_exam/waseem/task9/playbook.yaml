@@ -1,0 +1,10 @@
+---
+- name: Task9
+  hosts: ansible2
+  become: true
+
+
+  tasks:
+    - name: Run sample-mysql role
+      import_role:
+        name: sample-mysql

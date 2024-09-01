@@ -1,0 +1,28 @@
+---
+- name: Task13
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Set highmem
+      set_fact:
+        highmem: "{{ ansible_facts['memory_mb']['real']['total'] > 1024 }}"
+    - name: Set swapiness on highmem
+      when: highmem
+      sysctl:
+        name: vm.swappiness
+        value: 30
+        sysctl_set: true
+        reload: true
+        state: present
+    - name: Get swappiness
+      command:
+        cmd: sysctl -n vm.swappiness
+      register: swappiness
+    - name: Print swappiness
+      debug:
+        var: swappiness.stdout
+    - name: Print error message
+      fail:
+        msg: "Server memory less than 1024MB"
+      when: not highmem

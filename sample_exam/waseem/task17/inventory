@@ -1,0 +1,14 @@
+---
+all:
+  children:
+    proxy:
+      hosts:
+        ansible1:
+    webservers:
+      hosts:
+        ansible2:
+        ansible3:
+    database:
+      hosts:
+        ansible3:
+        ansible4:

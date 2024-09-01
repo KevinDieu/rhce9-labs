@@ -1,0 +1,29 @@
+---
+# tasks file for sample-apache
+- name: Install packages
+  dnf:
+    name:
+      - httpd
+      - mod_ssl
+      - php
+      - firewalld
+    state: present
+- name: Start httpd
+  service:
+    name: httpd
+    state: started
+    enabled: true
+- name: Allow httpd through firewall
+  firewalld:
+    service: "{{ item }}"
+    state: enabled
+    immediate: true
+    permanent: true
+  loop:
+    - http
+    - https
+- name: Add custom index.html
+  template:
+    src: templates/index.html.j2
+    dest: /var/www/html/index.html
+  notify: reload httpd

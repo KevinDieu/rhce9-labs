@@ -1,0 +1,19 @@
+---
+- name: Task15
+  become: true
+  hosts: database
+
+  tasks:
+    - name: Create facts directory
+      file:
+        state: directory
+        path: /etc/ansible/facts.d
+    - name: Add custom fact
+      template:
+        src: templates/custom.fact.j2
+        dest: /etc/ansible/facts.d/custom.fact
+    - name: re-gather facts
+      setup:
+    - name: Print custom fact
+      debug:
+        var: ansible_local['custom']['sample_exam']['server_role']

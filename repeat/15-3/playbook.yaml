@@ -1,0 +1,85 @@
+---
+- name: Exercise 15-3
+  hosts: all
+  become: true
+
+  vars:
+    disk: sdb
+    vg_name: vgfiles
+    lv_name: lvfiles
+
+  tasks:
+    - name: Set disk exists fact
+      set_fact:
+        disk_exists: "{{ ansible_facts['devices'][disk] is defined }}" 
+    - debug:
+        var: "ansible_facts['devices'][disk]"
+      tags:
+        - never
+        - debug
+    - name: Fail systems without existing disk
+      when: not disk_exists
+      fail:
+        msg: Device {{disk}} not present
+    - name: Wipe disk
+      shell:
+        cmd: |
+          wipefs -fa /dev/{{disk}}
+          dd if=/dev/zero of=/dev/{{disk}} bs=1M count=10
+      tags:
+        - wipe
+        - never
+    - name: Create disk partition
+      parted:
+        device: /dev/{{disk}}
+        number: 1
+        state: present
+    - name: "Create lvm vol group on disk partition 1"
+      lvg:
+        vg: "{{ vg_name }}" 
+        pvs: "/dev/{{disk}}1"
+        pvresize: true
+    - name: Get volume size
+      command:
+        cmd: vgs {{vg_name}} --noheadings --nosuffix -o vg_size --units g
+      register: vol_size
+    - debug:
+        var: vol_size.stdout
+      tags:
+        - never
+        - debug
+    - name: Set bigvol fact
+      set_fact:
+        big_vol: "{{ vol_size.stdout | int > 5 }}"
+    - debug:
+        var: big_vol
+      tags:
+        - never
+        - debug
+    - name: Create big lvm
+      when: big_vol
+      lvol:
+        lv: "{{ lv_name }}"
+        vg: "{{ vg_name }}"
+        size: 6g
+    - name: Create small lvm
+      when: not big_vol
+      lvol:
+        lv: "{{ lv_name }}"
+        vg: "{{ vg_name }}"
+        size: 3g
+    - name: Create filesystem
+      filesystem:
+        fstype: xfs
+        dev: /dev/mapper/{{vg_name}}-{{lv_name}}
+    - name: Create mountpoint
+      file:
+        path: /files
+        state: directory
+    - name: Mount lvol
+      mount:
+        src: /dev/mapper/{{vg_name}}-{{lv_name}}
+        path: /files
+        state: mounted
+        fstype: xfs
+

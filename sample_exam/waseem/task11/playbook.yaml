@@ -1,0 +1,26 @@
+---
+- name: Task11
+  hosts: webservers
+  become: true
+  vars_files:
+    - vars/main.yaml
+  
+  pre_tasks:
+    - name: Remove conflicting packages
+      dnf:
+        name:
+          - nginx
+          - httpd
+        state: absent
+    - name: Allow http through firewall
+      firewalld:
+        service: http
+        state: enabled
+        immediate: true
+        permanent: true
+  tasks:
+    - include_role: 
+        name: geerlingguy.haproxy
+        vars_from: vars/var.yaml
+        apply:
+          diff: true

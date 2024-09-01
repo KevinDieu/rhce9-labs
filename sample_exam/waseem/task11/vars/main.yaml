@@ -1,0 +1,4 @@
+haproxy_backend_balance_method: 'roundrobin'
+haproxy_backend_mode: 'http'
+haproxy_backend_server:
+  - name: ansible2
